@@ -19,50 +19,47 @@ interface WorkProject {
 
 const Work = () => {
   useGSAP(() => {
-  let translateX: number = 0;
+    const workFlex = document.querySelector(".work-flex") as HTMLElement;
+    const workSection = document.querySelector(".work-section") as HTMLElement;
+    if (!workFlex || !workSection) return;
 
-  function setTranslateX() {
-    const box = document.getElementsByClassName("work-box");
-    const rectLeft = document
-      .querySelector(".work-container")!
-      .getBoundingClientRect().left;
-    const rect = box[0].getBoundingClientRect();
-    const parentWidth = box[0].parentElement!.getBoundingClientRect().width;
-    let padding: number =
-      parseInt(window.getComputedStyle(box[0]).padding) / 2;
-    translateX = rect.width * box.length - (rectLeft + parentWidth) + padding;
-  }
+    const calculateDistance = () => {
+      return Math.max(0, workFlex.scrollWidth - window.innerWidth + 160);
+    };
 
-  setTranslateX();
+    const timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".work-section",
+        start: "top top",
+        end: () => `+=${calculateDistance()}`,
+        scrub: 0.6,
+        pin: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        id: "work",
+      },
+    });
 
-  let timeline = gsap.timeline({
-    scrollTrigger: {
-      trigger: ".work-section",
-      start: "top top",
-      end: `+=${translateX}`, // Use actual scroll width
-      scrub: true,
-      pin: true,
-      id: "work",
-    },
-  });
+    timeline.to(".work-flex", {
+      x: () => -calculateDistance(),
+      ease: "none",
+    });
 
-  timeline.to(".work-flex", {
-    x: -translateX,
-    ease: "none",
-  });
+    // Scroll progress bar
+    timeline.to(
+      ".work-scroll-progress",
+      {
+        scaleX: 1,
+        ease: "none",
+      },
+      0
+    );
 
-  // Scroll progress bar
-  timeline.to(".work-scroll-progress", {
-    scaleX: 1,
-    ease: "none",
-  }, 0);
-
-  // Clean up (optional, good practice)
-  return () => {
-    timeline.kill();
-    ScrollTrigger.getById("work")?.kill();
-  };
-}, []);
+    return () => {
+      timeline.kill();
+      ScrollTrigger.getById("work")?.kill();
+    };
+  }, []);
   return (
     <div className="work-section" id="work">
       <div className="work-scroll-track">

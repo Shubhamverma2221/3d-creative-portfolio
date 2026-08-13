@@ -202,36 +202,24 @@ const TechStack = () => {
   const [enableAO, setEnableAO] = useState(false);
 
   useEffect(() => {
-    const workEl = document.getElementById("work");
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking && workEl) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          const threshold = workEl.getBoundingClientRect().top;
-          setIsActive(
-            (window.scrollY || document.documentElement.scrollTop) > threshold
-          );
-          ticking = false;
-        });
-      }
-    };
-    const onNavClick = () => {
-      let count = 0;
-      const id = setInterval(() => {
-        handleScroll();
-        if (++count >= 50) clearInterval(id);
-      }, 20);
-    };
-    document.querySelectorAll(".header a").forEach((el) => {
-      (el as HTMLAnchorElement).addEventListener("click", onNavClick);
-    });
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const techEl = document.querySelector(".techstack");
+    if (!techEl) {
+      setIsActive(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsActive(true);
+        }
+      },
+      { rootMargin: "400px" }
+    );
+
+    observer.observe(techEl);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.querySelectorAll(".header a").forEach((el) => {
-        (el as HTMLAnchorElement).removeEventListener("click", onNavClick);
-      });
+      observer.disconnect();
     };
   }, []);
 

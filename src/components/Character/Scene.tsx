@@ -156,25 +156,26 @@ const Scene = () => {
     const mobileSkip = mobile ? 2 : 1;
     let frameCount = 0;
 
-    // Character is visible through landing + about + whatIDo sections.
-    // Use the character-model element's visibility to determine rendering.
-    const charEl = canvasDiv.current;
-    const isCharVisible = () => {
-      if (!charEl) return cachedScrollY < 500;
-      const rect = charEl.getBoundingClientRect();
-      return rect.bottom > 0 && rect.top < window.innerHeight;
-    };
+    let isCharInViewport = true;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isCharInViewport = entries[0]?.isIntersecting ?? true;
+      },
+      { rootMargin: "300px" }
+    );
+    if (canvasDiv.current) {
+      observer.observe(canvasDiv.current);
+    }
 
     const animate = (now = 0) => {
       animFrameId = requestAnimationFrame(animate);
-      if (!isPageVisible) return;
+      if (!isPageVisible || !isCharInViewport) return;
       if (now - lastFrameTime < frameInterval) return;
       lastFrameTime = now;
-      if (!isCharVisible()) return;
       frameCount++;
       const elapsed = clock.getElapsedTime();
       animations.update(elapsed);
-      if (cachedScrollY < 300) mouseTracker.update();
+      if (cachedScrollY < 400) mouseTracker.update();
       if (frameCount % mobileSkip === 0) {
         renderer.render(scene, camera);
       }
@@ -193,6 +194,7 @@ const Scene = () => {
     renderer.domElement.addEventListener("webglcontextrestored", onContextRestored);
 
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibilityChange);
